@@ -38,7 +38,9 @@ typedef struct BMPImage
     int *pixel_array;
 } BMPImage;
 
-unsigned short MineReadUSHORT( char *restrict buffer , unsigned int *restrict index )
+// char buffer[MY_BMP_FILE_AND_VERSION_3_HEADERS_SIZE];
+
+unsigned short MineReadUSHORT( char *buffer , unsigned int *restrict index )
 {
     char temp_for_USHORT[ 2 ];
     temp_for_USHORT[ 0 ] = buffer[ *index ];
@@ -57,10 +59,10 @@ unsigned int MineReadUINT( char *restrict buffer , unsigned int *restrict index)
     temp_for_UINT[ 3 ] = buffer[ *index + 3 ];
     *index+=4;
 
-    return ( temp_for_UINT[3]  << 24 | temp_for_UINT[2] << 16 | temp_for_UINT[1] << 8 | temp_for_UINT[0]);
+    return ( temp_for_UINT[3]  << 24u | temp_for_UINT[2] << 16u | temp_for_UINT[1] << 8u | temp_for_UINT[0]);
 }
 
-void MineWriteUSHORT(unsigned short *restrict thing_to_write, char *restrict buffer ,  int  *index )
+void MineWriteUSHORT(unsigned short *restrict thing_to_write, char *restrict buffer ,  int *restrict index )
 {
 
     buffer[ ( *index )++ ] = ( *thing_to_write & 0x00ffu ) >> 0u;
@@ -79,10 +81,10 @@ void MineWriteUINT(unsigned int *restrict thing_to_write, char *restrict buffer 
 }
 
 
-void reverse_pixel_array( int* array , int bit_per_pixel , int width , int height )
+void reverse_pixel_array( int* array , int bit_per_pixel , unsigned int width , int height )
 {
     int bytes_per_pixel = bit_per_pixel / 8;
-    int aligning = ( 4 - ( bytes_per_pixel * width ) % 4 ) % 4;
+    int aligning = ( 4 - ( bytes_per_pixel * (int)width ) % 4 ) % 4;
     int length_to_swap = sizeof( int ) * width + aligning;
     printf("\nlentght = %d" , length_to_swap);
     printf("\nlentght = %d" , length_to_swap);
@@ -96,7 +98,7 @@ void reverse_pixel_array( int* array , int bit_per_pixel , int width , int heigh
 }
 
 
-int DecodeColorTable(struct  BMPImage *decoded_struct , FILE *input_file , int *restrict check_for_errors)
+int DecodeColorTable(struct  BMPImage *decoded_struct , FILE *input_file )
 {
     if( decoded_struct->info.color_used == 0 )
     {
@@ -125,7 +127,7 @@ int DecodeColorTable(struct  BMPImage *decoded_struct , FILE *input_file , int *
 
 int DecodePixelArray(struct  BMPImage *decoded_struct , FILE *input_file)
 {
-    int pixels_count = decoded_struct->info.pixel_height * decoded_struct->info.pixel_width;
+    unsigned int pixels_count = decoded_struct->info.pixel_height * decoded_struct->info.pixel_width;
     int *pixel_array = (int*)malloc( sizeof( int ) * pixels_count );
     if(pixel_array == NULL)
     {
@@ -205,8 +207,8 @@ int  decode_input_file(FILE *input_file , int *restrict check_for_errors , BMPIm
     calculated_size = ftell( input_file );
     fseek( input_file , MY_BMP_FILE_AND_VERSION_3_HEADERS_SIZE , SEEK_SET );
 
-    decoded_struct->header.type = MineReadUSHORT( &buffer , &index );
-    decoded_struct->header.size = MineReadUINT  ( &buffer , &index );
+    decoded_struct->header.type = MineReadUSHORT( buffer , &index );
+    decoded_struct->header.size = MineReadUINT  ( buffer , &index );
     if( decoded_struct->header.type != 0x4d42 )
     {
         fprintf(stderr , "This is not BMP file");
@@ -217,73 +219,73 @@ int  decode_input_file(FILE *input_file , int *restrict check_for_errors , BMPIm
         fprintf( stderr , "File was damaged" );
         return -2;
     }
-    decoded_struct->header.ReservedFirst = MineReadUSHORT( &buffer , &index );
+    decoded_struct->header.ReservedFirst = MineReadUSHORT( buffer , &index );
     if( decoded_struct->header.ReservedFirst != 0x0 )
     {
         fprintf(stderr , "BMP file was damaged" );
         return -2;
     }
-    decoded_struct->header.ReservedSecond = MineReadUSHORT( &buffer , &index );
+    decoded_struct->header.ReservedSecond = MineReadUSHORT( buffer , &index );
     if( decoded_struct->header.ReservedSecond != 0x0 )
     {
         fprintf(stderr , "BMP file was damaged" );
         return -2;
     }
-    decoded_struct->header.bfOffBits = MineReadUINT( &buffer , &index );
-    decoded_struct->info.bmp_verison = MineReadUINT( &buffer , &index );
+    decoded_struct->header.bfOffBits = MineReadUINT( buffer , &index );
+    decoded_struct->info.bmp_verison = MineReadUINT( buffer , &index );
     if(decoded_struct->info.bmp_verison != 40 )
     {
         fprintf(stderr , "Wrong BMP version, program can work only with 3rd verison" );
         return -1;
     }
 
-    decoded_struct->info.pixel_width = MineReadUINT( &buffer , &index );
+    decoded_struct->info.pixel_width = MineReadUINT( buffer , &index );
     if( decoded_struct->info.pixel_width == 0 )
     {
         fprintf(stderr , "File was damaged");
         return -2;
     }
-    decoded_struct->info.pixel_height = MineReadUINT( &buffer , &index );
+    decoded_struct->info.pixel_height = MineReadUINT( buffer , &index );
     if( decoded_struct->info.pixel_height == 0 ) {
         fprintf(stderr, "File was damaged");
         return -2;
     }
 
-    decoded_struct->info.Planes = MineReadUSHORT( &buffer , &index );
+    decoded_struct->info.Planes = MineReadUSHORT( buffer , &index );
     if(decoded_struct->info.Planes != 1)
     {
         fprintf(stderr , "File was damaged");
         return -2;
     }
-    decoded_struct->info.bit_per_pixel = MineReadUSHORT( &buffer , &index );
+    decoded_struct->info.bit_per_pixel = MineReadUSHORT( buffer , &index );
     if ( decoded_struct->info.bit_per_pixel != 8 && decoded_struct->info.bit_per_pixel !=24 )
     {
         fprintf(stderr , "App can work only witch 8 or 24 bits per pixel. Also it is possible, that your file was damaged");
         return -2;
     }
-    decoded_struct->info.compression   = MineReadUINT( &buffer , &index );
+    decoded_struct->info.compression   = MineReadUINT( buffer , &index );
     if ( decoded_struct->info.compression != 0 )
     {
         fprintf( stderr , "App can work only with uncomressed files" );
         return -1;
     }
-    decoded_struct->info.image_size = MineReadUINT( &buffer , &index );
+    decoded_struct->info.image_size = MineReadUINT( buffer , &index );
     if( ( ( decoded_struct->info.pixel_height ) * ( decoded_struct->info.pixel_width ) * ( decoded_struct->info.bit_per_pixel / 8 ) )
         != decoded_struct->info.image_size )
     {
         fprintf(stderr , "File was damaged");
         return -2;
     }
-    decoded_struct->info.HorResolution  =    MineReadUINT( &buffer , &index );
-    decoded_struct->info.VerResolution  =    MineReadUINT( &buffer , &index );
-    decoded_struct->info.color_used     =    MineReadUINT( &buffer , &index );
-    decoded_struct->info.count_of_cells =    MineReadUINT( &buffer , &index );
+    decoded_struct->info.HorResolution  =    MineReadUINT( buffer , &index );
+    decoded_struct->info.VerResolution  =    MineReadUINT( buffer , &index );
+    decoded_struct->info.color_used     =    MineReadUINT( buffer , &index );
+    decoded_struct->info.count_of_cells =    MineReadUINT( buffer , &index );
     if ( *check_for_errors != 0 )
     {
         return *check_for_errors;
     }
 
-    if (( *check_for_errors = DecodeColorTable(decoded_struct, input_file, check_for_errors)) != 0)
+    if (( *check_for_errors = DecodeColorTable(decoded_struct, input_file)) != 0)
     {
         return *check_for_errors;
     }
@@ -309,7 +311,7 @@ int get_negative(int *restrict check_for_errors , struct BMPImage *decoded_struc
 
 int SaveImage(char *OutputName  , struct BMPImage *decoded_struct )
 {
-    unsigned char buffer[ MY_BMP_FILE_AND_VERSION_3_HEADERS_SIZE ];
+    char buffer[ MY_BMP_FILE_AND_VERSION_3_HEADERS_SIZE ];
     int index = 0;
 
     FILE *output_file = fopen( OutputName , "wb" );
@@ -319,23 +321,23 @@ int SaveImage(char *OutputName  , struct BMPImage *decoded_struct )
         return -1;
     }
 
-    MineWriteUSHORT( &decoded_struct->header.type             , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->header.size             , &buffer , &index );
-    MineWriteUSHORT( &decoded_struct->header.ReservedFirst    , &buffer , &index );
-    MineWriteUSHORT( &decoded_struct->header.ReservedSecond   , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->header.bfOffBits        , &buffer , &index );
+    MineWriteUSHORT( &decoded_struct->header.type             , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->header.size             , buffer , &index );
+    MineWriteUSHORT( &decoded_struct->header.ReservedFirst    , buffer , &index );
+    MineWriteUSHORT( &decoded_struct->header.ReservedSecond   , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->header.bfOffBits        , buffer , &index );
 
-    MineWriteUINT  ( &decoded_struct->info.bmp_verison        , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.pixel_width        , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.pixel_height       , &buffer , &index );
-    MineWriteUSHORT( &decoded_struct->info.Planes             , &buffer , &index );
-    MineWriteUSHORT( &decoded_struct->info.bit_per_pixel      , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.compression        , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.image_size         , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.HorResolution      , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.VerResolution      , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.color_used         , &buffer , &index );
-    MineWriteUINT  ( &decoded_struct->info.count_of_cells     , &buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.bmp_verison        , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.pixel_width        , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.pixel_height       , buffer , &index );
+    MineWriteUSHORT( &decoded_struct->info.Planes             , buffer , &index );
+    MineWriteUSHORT( &decoded_struct->info.bit_per_pixel      , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.compression        , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.image_size         , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.HorResolution      , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.VerResolution      , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.color_used         , buffer , &index );
+    MineWriteUINT  ( &decoded_struct->info.count_of_cells     , buffer , &index );
 
     if ( fwrite( buffer , sizeof( buffer ) , 1 , output_file ) != 1 )
     {
@@ -401,7 +403,7 @@ int MyImplementation( char **argv)
         return -1;
     }
 
-    BMPImage decoded_struct = { {} , {} , {NULL} , {NULL} };
+    BMPImage decoded_struct = { {} , {} , NULL , NULL };
     check_for_errors = decode_input_file(input_file , &check_for_errors , &decoded_struct);
     if(check_for_errors != 0)
     {

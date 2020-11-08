@@ -31,14 +31,14 @@ int check_for_params(int *restrict number_of_params , char *restrict params[] , 
         return -1;
     }
 
-    int temp_for_strlen_of_param = strlen( params[ 2 ] );
+    int temp_for_strlen_of_param = (int)strlen( params[ 2 ] );
     if( ( temp_for_strlen_of_param <= 4 )  || ( strncmp( ( params[ 2 ] + ( strlen( params[ 2 ] ) - 4 ) ) , ".bmp" , 4) != 0 ) )
     {
         fprintf( stderr , "Please enter first parram correctly: <first_file>.bmp ");
         return -1;
     }
 
-    temp_for_strlen_of_param = strlen( params[ 3 ] );
+    temp_for_strlen_of_param = (int)strlen( params[ 3 ] );
     if( (  temp_for_strlen_of_param <= 4 ) || ( strncmp( (params[ 3 ] + (strlen( params[ 3 ] ) - 4)) , ".bmp" , 4) != 0 ) )
     {
         fprintf( stderr , "Please enter second parram correctly: <second_file>.bmp ");

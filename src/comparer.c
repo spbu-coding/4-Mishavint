@@ -13,14 +13,14 @@ int check_for_errors_with_params( int *restrict number_of_params , char* params[
         return -1;
     }
 
-    int temp_for_strlen_of_param = strlen( params[ 1 ] );
+    int temp_for_strlen_of_param = (int)strlen( params[ 1 ] );
     if( ( temp_for_strlen_of_param <= 4 )  || ( strncmp( ( params[ 1 ] + ( strlen( params[ 1 ] ) - 4 ) ) , ".bmp" , 4) != 0 ) )
     {
         fprintf( stderr , "Please enter first parram correctly: <first_file>.bmp ");
         return -1;
     }
 
-    temp_for_strlen_of_param = strlen( params[ 2 ] );
+    temp_for_strlen_of_param = (int)strlen( params[ 2 ] );
     if( (  temp_for_strlen_of_param <= 4 ) || ( strncmp( (params[ 2 ] + (strlen( params[ 2 ] ) - 4)) , ".bmp" , 4) != 0 ) )
     {
         fprintf( stderr , "Please enter second parram correctly: <second_file>.bmp ");
@@ -51,8 +51,8 @@ int main(int argc , char **argv)
         return -1;
     }
 
-    BMPImage first_decoded_struct = { {} , {} , {NULL} , {NULL} } ;
-    BMPImage second_decoded_struct = { {} , {} , {NULL} , {NULL} } ;
+    BMPImage first_decoded_struct = { {} , {} , NULL , NULL } ;
+    BMPImage second_decoded_struct = { {} , {} , NULL , NULL } ;
 
     check_for_errors = decode_input_file( first_file , &check_for_errors  , &first_decoded_struct );
     if( check_for_errors != 0 )
