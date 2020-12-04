@@ -5,7 +5,9 @@
 #include <string.h>
 #include "MineRealization.h"
 
-int check_for_errors_with_params( int *restrict number_of_params , char* params[] )
+#define MAX_MOUNT_OF_ARRAY 100
+
+int check_for_errors_with_params( int const* number_of_params , char* params[] )
 {
     if( *number_of_params != 3 )
     {
@@ -73,7 +75,7 @@ int main(int argc , char **argv)
         fprintf( stderr , "can not make compare between 8 bits_per_pixel and 24 bites_per_pixel" );
         return -1;
     }
-    if( first_decoded_struct.info.pixel_height != second_decoded_struct.info.pixel_height )
+    if( abs(first_decoded_struct.info.pixel_height) != abs(second_decoded_struct.info.pixel_height) )
     {
         fprintf(stderr , "First file's height not as second file's one " );
         return -1;
@@ -84,21 +86,9 @@ int main(int argc , char **argv)
         return -1;
     }
 
-    int array_of_pixels[ 100 ]  , array_of_pixels2[ 100 ] , mask , count = 0 ;
+    int array_of_pixels[ MAX_MOUNT_OF_ARRAY ]  , array_of_pixels2[ MAX_MOUNT_OF_ARRAY ] , mask , count = 0 ;
 
-    if( first_decoded_struct.info.bit_per_pixel == 8 )
-    {
-        mask = 0x000000ff;
-    }
-    else
-    {
-        mask = 0x00ffffff;
-    }
-
-//    for( int i = 0 ; i < 10 ; i++ )
-//    {
-//        printf("[%d] = %d ; %d\n" , i , first_decoded_struct.pixel_array[i] , second_decoded_struct.pixel_array[i] );
-//    }
+    mask = ( first_decoded_struct.info.bit_per_pixel == 8 ) ? 0x000000ff : 0x00ffffff;
 
 
 for (int i = 0; i < first_decoded_struct.info.pixel_width; i++) {
@@ -110,7 +100,7 @@ for (int i = 0; i < first_decoded_struct.info.pixel_width; i++) {
             array_of_pixels2[count++] = j;
         }
 
-        if (count == 100)
+        if (count == MAX_MOUNT_OF_ARRAY)
         {
             j = first_decoded_struct.info.pixel_height;                 // Did this to
             i = (int) first_decoded_struct.info.pixel_width;            // Exit from "for"
@@ -118,13 +108,10 @@ for (int i = 0; i < first_decoded_struct.info.pixel_width; i++) {
     }
 }
 
-
-
     for( int i = 0 ; i < count ; i++)
     {
         fprintf( stderr , "x:%d y:%d\n" , array_of_pixels[ i ] , array_of_pixels2[ i ] );
     }
-
 
     FreeBmp( &first_decoded_struct );
     FreeBmp( &second_decoded_struct );

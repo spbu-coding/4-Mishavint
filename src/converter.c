@@ -52,7 +52,7 @@ int check_for_params(int *restrict number_of_params , char *restrict params[] , 
 int main(int argc , char** argv)
 {
     unsigned char mine_or_theirs = 0;         /* If users wants mine code then mine_or_theirs will be "1". If user wants their code then "2" */
-    int check_for_errors_with_params = check_for_params(&argc , argv , &mine_or_theirs);
+    int check_for_errors_with_params = check_for_params(&argc , argv , &mine_or_theirs);  // Function works with mine_or_theirs. If user wants mine realisation, function will do it = 1, in other way = 2
     if(check_for_errors_with_params != 0)
     {
         return check_for_errors_with_params;
