@@ -81,20 +81,26 @@ void MineWriteUINT(unsigned int *restrict thing_to_write, char *restrict buffer 
 }
 
 
-void reverse_pixel_array( int* array , int bit_per_pixel , unsigned int width , int height )
+int reverse_pixel_array( int* array , int bit_per_pixel , unsigned int width , int height )
 {
     int bytes_per_pixel = bit_per_pixel / 8;
     int aligning = ( 4 - ( bytes_per_pixel * (int)width ) % 4 ) % 4;
-    int length_to_swap = sizeof( int ) * width + aligning;
+    int length_to_swap = (int)sizeof( int ) * (int)width + aligning;
     printf("\nlentght = %d" , length_to_swap);
     printf("\nlentght = %d" , length_to_swap);
     int *temp = ( int* )malloc( length_to_swap );
+    if( temp == NULL)
+    {
+        fprintf(stderr , "Can not take memory");
+        return -1;
+    }
     for( int i = 0 ; i < height / 2 ; i++ )
     {
         memcpy( temp , &array[ width * i ] , length_to_swap );
         memcpy( &array[ width * i ], &array[ width * ( height - i - 1 ) ], length_to_swap);
         memcpy( &array[ width * ( height - i - 1 )] , temp, length_to_swap);
     }
+    return 0;
 }
 
 
@@ -117,6 +123,7 @@ int DecodeColorTable(struct  BMPImage *decoded_struct , FILE *input_file )
     {
         fprintf(stderr , "Can not read color_table from file");
         free ( color_table );
+
         return -1;
     }
 
@@ -157,8 +164,11 @@ int DecodePixelArray(struct  BMPImage *decoded_struct , FILE *input_file)
 
     if( decoded_struct->info.pixel_height < 0 )
     {
-        reverse_pixel_array( pixel_array , decoded_struct->info.bit_per_pixel
-                             , decoded_struct->info.pixel_width , decoded_struct->info.pixel_height );
+        if(reverse_pixel_array( pixel_array , decoded_struct->info.bit_per_pixel
+                             , decoded_struct->info.pixel_width , decoded_struct->info.pixel_height ) !=0 )
+        {
+            return -1;
+        }
     }
 
     decoded_struct->pixel_array = pixel_array;
@@ -359,8 +369,12 @@ int SaveImage(char *OutputName  , struct BMPImage *decoded_struct )
 
     if( decoded_struct->info.pixel_height < 0  )
     {
-        reverse_pixel_array( decoded_struct->pixel_array , decoded_struct->info.bit_per_pixel ,
-                             decoded_struct->info.pixel_width , decoded_struct->info.pixel_height);
+        if( reverse_pixel_array( decoded_struct->pixel_array , decoded_struct->info.bit_per_pixel ,
+                             decoded_struct->info.pixel_width , decoded_struct->info.pixel_height) != 0)
+        {
+            return -1;
+        }
+
     }
 
 
@@ -403,7 +417,7 @@ int MyImplementation( char **argv)
         return -1;
     }
 
-    BMPImage decoded_struct = { {} , {} , NULL , NULL };
+    BMPImage decoded_struct = { {} , {} , NULL , NULL } ;
     check_for_errors = decode_input_file(input_file , &check_for_errors , &decoded_struct);
     if(check_for_errors != 0)
     {
